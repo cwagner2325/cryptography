@@ -1,16 +1,15 @@
-//*************************************************************************** 
-// File:			main.cpp
+//*****************************************************************************
+// File:				main.cpp
 // Author:			Cayden Wagner
-// Date:			Ferbruary 10, 2021
-// Class:			CS250
-// Assignment:		Cytography
-// Purpose:			To read in a message from the user. If the message is in
-//					plain text format, the program will output the message	
-//					into a file in encrypted form. If the message is 
-//					encryted, the program will output the message in plain 
-//					text form.
-// Hours:			2		
-//*************************************************************************** 
+// Date:				Ferbruary 21, 2021
+// Class:				CS250
+// Assignment:	Cytography
+// Purpose:			To read in a message from the user. If the message is in plain
+//							text form, the program will output the message into a file
+//							in encrypted form. If the message is encrypted, the program 
+//							will output the message in plain text.
+// Hours:				5
+//*****************************************************************************
 
 #include <iostream>
 #include <string>
@@ -19,30 +18,38 @@
 using namespace std;
 
 const int LETTERS_IN_ALPHABET = 26;
+const int ASCII_VALUE_OF_A = 65;
+const int ASCII_VALUE_OF_Z = 91;
 
-void drawHeading (string title, char borderChar, int padding);
-char getUserInput ();
-void getMappingData (int& numberOfMappings, string& keys);
-void openFileForRead (ifstream& inputFile, string message);
+void drawHeading(string title, char borderChar, int padding);
+char getUserInput();
+void getMappingData(int& numberOfMappings, string& keys);
+void openFileForRead(ifstream& inputFile, string message);
 void openFileForWrite(ofstream& outputFile, string message);
 void closeFileForRead(ifstream& inputFile);
 void closeFileForWrite(ofstream& outputFile);
 void constructMappingArray(char mappingArray[][LETTERS_IN_ALPHABET],
-					   	   string keys,
-						   int numberOfMappings);
+					   							 string keys,
+												   int numberOfMappings);
 void printMappingArray(const char mappingArray[][LETTERS_IN_ALPHABET], 
-					   int numberOfMappings);
+										   int numberOfMappings);
+char encodeCharacter(char plaintextCharacter,
+										 const char mappingArray[][LETTERS_IN_ALPHABET],
+										 int numberOfMappings);
+char decodeCharacter(char ciphertextCharacter,
+									 	 const char mappingArray[][LETTERS_IN_ALPHABET],
+										 int numberOfMappings);
 
-//***************************************************************************
-// Function:     main
+//*****************************************************************************
+// Function:			main
 //
-// Description:  Driver function to read in text froma file and encrypt or
-//				 decrypt it based on user choice
+// Description:		Driver function to read in text from a file and encrypt or
+//							  decrypt it based on user choice
 //
-// Parameters:	 None
+// Parameters:	  None
 //	
-// Returned:	 Exit Status
-//***************************************************************************
+// Returned:		  Exit Status
+//*****************************************************************************
 
 int main() {
 	const char ENCRYPT_OPTION = 'E', DECRYPT_OPTION = 'D', QUIT_OPTION = 'Q';
@@ -50,9 +57,9 @@ int main() {
 	const string DECRYPT_MESSAGE = "Enter cyphertext filename: ";
 	const string ENCRYPT_MESSAGE = "Enter plaintext filename: ";
 	
-	char input;
+	char input, userInput = 'N';
 	char aMappingArray[LETTERS_IN_ALPHABET][LETTERS_IN_ALPHABET];
-	string keys;
+	string keys, line;
 	int numberOfMappings;
 	
 	ifstream inputFile;
@@ -61,42 +68,67 @@ int main() {
 	drawHeading(TITLE_STRING, '*', 10);
 
 	do {
-		input = getUserInput();
-	} while (!(ENCRYPT_OPTION == input || DECRYPT_OPTION == input 
-			   || QUIT_OPTION == input));
+		do {
+			input = getUserInput();
+		} while (!(ENCRYPT_OPTION == input || DECRYPT_OPTION == input 
+					 || QUIT_OPTION == input));
 
-	if (input == 'E' || input == 'D') {
-		getMappingData(numberOfMappings, keys);
+		if (input == 'E' || input == 'D') {
+			getMappingData(numberOfMappings, keys);
+			constructMappingArray(aMappingArray, keys, numberOfMappings);
 
-		if (input == 'D') {
-			openFileForRead(inputFile, DECRYPT_MESSAGE);
-			openFileForWrite(outputFile, ENCRYPT_MESSAGE);
-		}
-		else if (input == 'E') {
-			openFileForRead(inputFile, ENCRYPT_MESSAGE);
-			openFileForWrite(outputFile, DECRYPT_MESSAGE);
-		}
-		constructMappingArray(aMappingArray, keys, numberOfMappings);
-		printMappingArray(aMappingArray, numberOfMappings);
+			if (input == 'D') {
+				openFileForRead(inputFile, DECRYPT_MESSAGE);
+				openFileForWrite(outputFile, ENCRYPT_MESSAGE);
 
-		closeFileForRead(inputFile);
-		closeFileForWrite(outputFile);
-	}
+				while (!inputFile.eof()) {
+					getline(inputFile, line);
+					for (int i = 0; i < line.length(); i++) {
+						outputFile << decodeCharacter(line.at(i), aMappingArray,
+																					numberOfMappings);
+					}
+				}
+				cout << endl << "Your message has been decrypted!" << endl << endl;
+			}
+
+			else if (input == 'E') {
+				openFileForRead(inputFile, ENCRYPT_MESSAGE);
+				openFileForWrite(outputFile, DECRYPT_MESSAGE);
+
+				while (!inputFile.eof()) {
+					getline(inputFile, line);
+					for (int i = 0; i < line.length(); i++) {
+						outputFile << encodeCharacter(line.at(i), aMappingArray,
+																					numberOfMappings);
+					}
+				}
+				cout << endl << "Your message has been encrypted!" << endl << endl;
+
+			}
+
+			closeFileForRead(inputFile);
+			closeFileForWrite(outputFile);
+
+			cout << "Would you like to encrypt or decrypt another file (Y or N)?: ";
+			cin >> userInput;
+			cout << endl;
+		} 
+	} while (userInput == 'Y');
 
 	return EXIT_SUCCESS;
 }
 
-//***************************************************************************
+//*****************************************************************************
 // Function:     drawHeading
 //
 // Description:  Displays a title encompassed by a border character
 //
 // Parameters:	 title - Title of the program
-//				 borderChar - Character to encompass the title
-//				 padding - The amount of spaces surrounding the title
+//							 borderChar - Character to encompass the title
+//							 padding - The amount of spaces surrounding the title
 //	
-// Returned:	 None
-//***************************************************************************
+// Returned:		 None
+//*****************************************************************************
 
 void drawHeading(string title, char borderChar, int padding) {
 	int totalLength;
@@ -125,16 +157,16 @@ void drawHeading(string title, char borderChar, int padding) {
 	cout << endl << endl;
 }
 
-//***************************************************************************
+//*****************************************************************************
 // Function:     getUserInput
 //
 // Description:  Allows the user to choose wether they want to encrypt or 
-//				 decrypt or quit
+//							 decrypt or quit
 //
 // Parameters:	 None
 //	
-// Returned:	 None
-//***************************************************************************
+// Returned:		 None
+//*****************************************************************************
 
 char getUserInput() {
 	char input;
@@ -144,17 +176,17 @@ char getUserInput() {
 	return input;
 }
 
-//***************************************************************************
+//*****************************************************************************
 // Function:     getMappingData
 //
 // Description:  Allows the user to enter the number of mappings and keys
-//				 that they want
+//							 that they want
 //
 // Parameters:	 numberOfMappings - The number of mappings chosen
-//				 keys - The key letters chosen to configure the mapping array
+//							 keys - The key letters chosen to configure the mapping array
 //	
-// Returned:	 None
-//***************************************************************************
+// Returned:		 None
+//*****************************************************************************
 
 void getMappingData(int& numberOfMappings, string& keys) {
 	do {
@@ -168,16 +200,16 @@ void getMappingData(int& numberOfMappings, string& keys) {
 	} while (keys.length() != numberOfMappings);
 }
 
-//***************************************************************************
+//*****************************************************************************
 // Function:     openFileForRead
 //
 // Description:  Allows the user to enter a text file to open for inputting
 //
 // Parameters:	 inputFile - Allows the input file to open
-//				 message - A prompt displayed on screen to direct the user
+//							 message - A prompt displayed on screen to direct the user
 //	
-// Returned:	 None
-//***************************************************************************
+// Returned:		 None
+//*****************************************************************************
 
 void openFileForRead(ifstream& inputFile, string message) {
 	string fileName;
@@ -189,16 +221,16 @@ void openFileForRead(ifstream& inputFile, string message) {
 	}  while (!inputFile.is_open());
 }
 
-//***************************************************************************
+//*****************************************************************************
 // Function:     openFileForWrite
 //
 // Description:  Allows the user to enter a text file to open for outputting
 //
 // Parameters:	 outputFile - Allows the output file to open
-//				 message - A prompt displayed on screen to direct the user
+//							 message - A prompt displayed on screen to direct the user
 //	
-// Returned:	 None
-//***************************************************************************
+// Returned:		 None
+//*****************************************************************************
 
 void openFileForWrite(ofstream& outputFile, string message) {
 	string fileName;
@@ -210,47 +242,47 @@ void openFileForWrite(ofstream& outputFile, string message) {
 	} while (!outputFile.is_open());
 }
 
-//***************************************************************************
+//*****************************************************************************
 // Function:     closeFileForRead
 //
 // Description:  Closes the input file
 //
 // Parameters:	 inputFile - Allows the input file to close
 //	
-// Returned:	 None
-//***************************************************************************
+// Returned:		 None
+//*****************************************************************************
 
 void closeFileForRead(ifstream& inputFile) {
 	inputFile.close();
 }
 
-//***************************************************************************
+//*****************************************************************************
 // Function:     closeFileForWrite
 //
 // Description:  Closes the output file
 //
 // Parameters:	 outputFile - Allows the output file to close
-//	
-// Returned:	 None
-//***************************************************************************
+//		
+// Returned:		 None
+//*****************************************************************************
 
 void closeFileForWrite(ofstream& outputFile) {
 	outputFile.close();
 }
 
-//***************************************************************************
+//*****************************************************************************
 // Function:     constructMappingArray
 //
 // Description:  Constructs the mapping array by using the user's given keys
-//				 to configure the alphabet
+//							 to configure the alphabet
 //
 // Parameters:	 mappingArray - Array that contains the alphabet configured 
-//								by the user's inputted keys
-//				 keys - The key letters chosen to configure the mapping array
-//				 numberOfMappings - The number of mappings chosen
+//							 by the user's inputted keys
+//							 keys - The key letters chosen to configure the mapping array
+//							 numberOfMappings - The number of mappings chosen
 //	
-// Returned:	 None
-//***************************************************************************
+// Returned:		 None
+//*****************************************************************************
 
 void constructMappingArray(char mappingArray[][LETTERS_IN_ALPHABET],
 						   string keys,
@@ -262,25 +294,25 @@ void constructMappingArray(char mappingArray[][LETTERS_IN_ALPHABET],
 		for (int j = 0; j < LETTERS_IN_ALPHABET; j++) {
 			mappingArray[i][j] = letter;
 			letter++;
-			if (letter == 91) {
+			if (letter == ASCII_VALUE_OF_Z) {
 				letter = 'A';
 			}
 		}
 	}
 }
 
-//***************************************************************************
+//*****************************************************************************
 // Function:     printMappingArray
 //
 // Description:  Prints the mapping array that is configured by the user's
-//				 key letters in order to ease the debugging process
+//							 key letters in order to ease the debugging process
 //
 // Parameters:	 mappingArray - Array that contains the alphabet configured 
-//								by the user's inputted keys
-//				 numberOfMappings - The number of mappings chosen
+//							 by the user's inputted keys
+//							 numberOfMappings - The number of mappings chosen
 //	
-// Returned:	 None
-//***************************************************************************
+// Returned:		 None
+//*****************************************************************************
 
 void printMappingArray(const char mappingArray[][LETTERS_IN_ALPHABET],
 					   int numberOfMappings) {
@@ -290,4 +322,68 @@ void printMappingArray(const char mappingArray[][LETTERS_IN_ALPHABET],
 		}
 		cout << endl;
 	}
+}
+
+//*****************************************************************************
+// Function:     encodedCharacter
+//
+// Description:	 Takes a character and encodes it using the given keys
+//
+// Parameters:	 plaintextCharacter - A character in plain text from
+//							 mappingArray - Array that contains the alphabet configured 
+//							 by the user's inputted keys
+//							 numberOfMappings - The number of mappings chosen
+//	
+// Returned:		 encodedCharacter - The character in encoded form
+//*****************************************************************************
+
+char encodeCharacter(char plaintextCharacter,
+									 	 const char mappingArray[][LETTERS_IN_ALPHABET],
+										 int numberOfMappings) {
+	char encodedCharacter;
+	int charNumber;
+
+	encodedCharacter = plaintextCharacter;
+	if (plaintextCharacter >= 'A' && plaintextCharacter <= 'Z') {
+		for (int i = 0; i < numberOfMappings; i++) {
+			charNumber = encodedCharacter - ASCII_VALUE_OF_A;
+			encodedCharacter = mappingArray[i][charNumber];
+		}
+	}
+	return encodedCharacter;
+}
+
+//*****************************************************************************
+// Function:     decodeCharacter
+//
+// Description:  Takes a character and decrypts it using the given keys
+//
+// Parameters:	 ciphertextCharacter - A character in encrypted text form
+//							 mappingArray - Array that contains the alphabet configured 
+//							 by the user's inputted keys
+//							 numberOfMappings - The number of mappings chosen
+//	
+// Returned:		 decodedCharacter - The character in decrypted form
+//*****************************************************************************
+
+char decodeCharacter(char ciphertextCharacter,
+									 	 const char mappingArray[][LETTERS_IN_ALPHABET],
+									 	 int numberOfMappings) {
+	char decodedCharacter;
+	bool bIsMatch = false;
+
+	decodedCharacter = ciphertextCharacter;
+	if (ciphertextCharacter >= 'A' && ciphertextCharacter <= 'Z') {
+		for (int i = numberOfMappings - 1; i >= 0; i--) {
+			bIsMatch = false;
+			for (int j = 0; j < LETTERS_IN_ALPHABET; j++) {
+				if (decodedCharacter == mappingArray[i][j] && bIsMatch == false) {
+					decodedCharacter = ASCII_VALUE_OF_A + j;
+					bIsMatch = true;
+				}
+			}
+		}
+	}
+
+	return decodedCharacter;
 }
