@@ -384,6 +384,6 @@ char decodeCharacter(char ciphertextCharacter,
 			}
 		}
 	}
-
+ 
 	return decodedCharacter;
 }
