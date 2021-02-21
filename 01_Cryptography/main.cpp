@@ -38,7 +38,7 @@ char encodeCharacter(char plaintextCharacter,
 										 int numberOfMappings);
 char decodeCharacter(char ciphertextCharacter,
 									 	 const char mappingArray[][LETTERS_IN_ALPHABET],
-										 int numberOfMappings);
+										 int numberOfMappings); 
 
 //*****************************************************************************
 // Function:			main
